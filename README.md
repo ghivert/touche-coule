@@ -60,3 +60,9 @@ The idea of the game is to fight in a free for all style (every players will pla
 - `place` is the first function called by the contract after registering the ship. It should returns the place of the ship.
 - `update` is called after the ship is placed on the board. For some implementation reasons, the place can, in some times, not be given. You can use that information, or not.
 - Finally, `fire` is run at each turn, and should try to touch a ship by returning a position (x, y).
+- Deploy the contract with a proper deployment. 
+- Register the ship on the Main contract. 
+- Do all the same steps with a second ship and a second player. 
+- Test your implementation with the turn function. 
+
+Pro tip: you can automate the ship deployment and registering with the deployments. 
