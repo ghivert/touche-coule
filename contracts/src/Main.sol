@@ -80,7 +80,7 @@ contract Main {
       } else {
         uint newPlace = (x * game.width) + y + 1;
         x = newPlace % game.width;
-        y = newPlace / game.width;
+        y = newPlace / game.width % game.height;
       }
     }
     return (x, y);
