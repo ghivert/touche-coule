@@ -3,6 +3,7 @@
 Welcome to the DAAR project. The idea will be to implement a "Touché Coulé" (Battleship) game
 in a decentralized way, on Ethereum. This will have cool side effects, like not
 be forced to pay for servers.
+The project can't be run on Windows. Please, use WSL.
 
 # Installation
 
