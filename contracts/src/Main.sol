@@ -38,7 +38,7 @@ contract Main {
 
   function register(address ship) external {
     require(count[msg.sender] < 2, 'Only two ships');
-    require(used[ship], 'Ship alread on the board');
+    require(!used[ship], 'Ship alread on the board');
     require(index <= game.height * game.width, 'Too much ship on board');
     count[msg.sender] += 1;
     ships[index] = ship;
@@ -46,6 +46,7 @@ contract Main {
     (uint x, uint y) = placeShip(index);
     Ship(ships[index]).update(x, y);
     emit Registered(index, msg.sender, x, y);
+    used[ship] = true;
     index += 1;
   }
 
