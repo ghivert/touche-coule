@@ -3,6 +3,7 @@ import styles from './styles.module.css'
 import * as ethereum from '@/lib/ethereum'
 import * as main from '@/lib/main'
 import { BigNumber } from 'ethers'
+import { getAddress } from 'ethers/lib/utils'
 
 type Canceler = () => void
 const useAffect = (
@@ -130,10 +131,13 @@ const useBoard = (wallet: ReturnType<typeof useWallet>) => {
 }
 
 const Buttons = ({ wallet }: { wallet: ReturnType<typeof useWallet> }) => {
+  
+
   const next = () => wallet?.contract.turn()
+  //const reg = () => wallet?.contract.register()
   return (
     <div style={{ display: 'flex', gap: 5, padding: 5 }}>
-      <button onClick={() => {}}>Register</button>
+      <button onClick={() => wallet?.contract.register()}>Register</button>
       <button onClick={next}>Turn</button>
     </div>
   )
