@@ -67,3 +67,7 @@ The idea of the game is to fight in a free for all style (every players will pla
 - Test your implementation with the turn function. 
 
 Pro tip: you can automate the ship deployment and registering with the deployments. 
+
+# Bonus
+
+You can add some features to the project as a bonus if you want to dive more into the project. For example, you could implement custom ships (with different ships), you can allow them to move, or to discuss with each other. Feel free to add whatever you feel useful. Every new features will be taken into account.
