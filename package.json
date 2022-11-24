@@ -11,5 +11,8 @@
   },
   "devDependencies": {
     "concurrently": "^7.5.0"
+  },
+  "dependencies": {
+    "hardhat": "^2.12.2"
   }
 }

@@ -36,7 +36,8 @@ contract Main {
     emit Size(game.width, game.height);
   }
 
-  function register(address ship) external {
+  function register() external {
+    address ship = address(new Ship(msg.sender));
     require(count[msg.sender] < 2, 'Only two ships');
     require(!used[ship], 'Ship alread on the board');
     require(index <= game.height * game.width, 'Too much ship on board');
@@ -86,4 +87,10 @@ contract Main {
     }
     return (x, y);
   }
+  
+  function createShip() external returns (address){
+    Ship ship = new Ship(msg.sender);
+    return address(ship);
+  }
+  
 }
