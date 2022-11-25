@@ -104,11 +104,15 @@ const useBoard = (wallet: ReturnType<typeof useWallet>) => {
       const registeredEvent = await wallet.contract.queryFilter('Registered', 0)
       registeredEvent.forEach(event => {
         const { index, owner, x, y } = event.args
-        onRegistered(index, owner, x, y)
+        if(owner == wallet.details.account){
+          onRegistered(index, owner, x, y)
+        }
+        
       })
     }
     const updateTouched = async () => {
       const touchedEvent = await wallet.contract.queryFilter('Touched', 0)
+      console.log(touchedEvent)
       touchedEvent.forEach(event => {
         const { ship, x, y } = event.args
         onTouched(ship, x, y)
@@ -118,6 +122,7 @@ const useBoard = (wallet: ReturnType<typeof useWallet>) => {
     await updateRegistered()
     await updateTouched()
     console.log('Registering')
+    console.log()
     wallet.contract.on('Registered', onRegistered)
     wallet.contract.on('Touched', onTouched)
     return () => {
@@ -129,19 +134,32 @@ const useBoard = (wallet: ReturnType<typeof useWallet>) => {
   return board
 }
 
-const Buttons = ({ wallet }: { wallet: ReturnType<typeof useWallet> }) => {
+const Buttons = ({ wallet, setErrorMessage }: { wallet: ReturnType<typeof useWallet>, setErrorMessage : React.Dispatch<React.SetStateAction<string>> }) => {
   const next = () => wallet?.contract.turn()
+  const register = () => {
+    const shipAddress = wallet?.details.account == "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" ? main.myShip() : main.myShip2()
+    
+    wallet?.contract.register(shipAddress).catch(err => {
+      setErrorMessage(err.reason.split("'")[1])
+    })
+    
+    
+  }
   return (
     <div style={{ display: 'flex', gap: 5, padding: 5 }}>
-      <button onClick={() => {}}>Register</button>
+      <button onClick={
+        register
+      }>Register</button>
       <button onClick={next}>Turn</button>
     </div>
   )
 }
 
 const CELLS = new Array(100 * 100)
+
 export const App = () => {
   const wallet = useWallet()
+  const [errorMessage,setErrorMessage] = useState("")
   const board = useBoard(wallet)
   const size = useWindowSize()
   const st = {
@@ -162,7 +180,8 @@ export const App = () => {
           )
         })}
       </div>
-      <Buttons wallet={wallet} />
+      {errorMessage}
+      <Buttons wallet={wallet} setErrorMessage={setErrorMessage}/>
     </div>
   )
 }
