@@ -59,6 +59,10 @@ const useWallet = () => {
 type Ship = {}
 const useBoard = (wallet: ReturnType<typeof useWallet>) => {
   const [board, setBoard] = useState<(null | Ship)[][]>([])
+  const [owners, setOwners] = useState<any>([])
+  const [hitPosition, setHitPosition] = useState<any>([])
+  const [winner, setWinner] = useState<any>(null)
+
   useAffect(async () => {
     if (!wallet) return
     const onRegistered = (
@@ -68,6 +72,13 @@ const useBoard = (wallet: ReturnType<typeof useWallet>) => {
       y: BigNumber
     ) => {
       console.log('onRegistered')
+      setOwners(prev => {
+        if(prev.find(p => p.owner === owner)) return prev
+        return [...prev, {
+        owner,
+        color: generateHex()
+      }]}
+      )
       setBoard(board => {
         return board.map((x_, index) => {
           if (index !== x.toNumber()) return x_
@@ -92,6 +103,32 @@ const useBoard = (wallet: ReturnType<typeof useWallet>) => {
         })
       })
     }
+
+    const onFiredAt = (ship: String, x_: BigNumber, y_: BigNumber) => {
+      console.log('onFiredAt')
+      const x = x_.toNumber()
+      const y = y_.toNumber()
+      setHitPosition(prev => [...prev, {
+        ship,
+        x,
+        y
+      }])
+      setBoard(board => {
+        return board.map((x_, index) => {
+          if (index !== x) return x_
+          return x_.map((y_, indey) => {
+            if (indey !== y) return y_
+            return null
+          })
+        })
+      })
+    }
+
+    const onHasWinner = (owner: any) => {
+      setWinner(owner);
+    }
+
+
     const updateSize = async () => {
       const [event] = await wallet.contract.queryFilter('Size', 0)
       const width = event.args.width.toNumber()
@@ -105,6 +142,7 @@ const useBoard = (wallet: ReturnType<typeof useWallet>) => {
       registeredEvent.forEach(event => {
         const { index, owner, x, y } = event.args
         onRegistered(index, owner, x, y)
+        console.log("Owner: " + owner)
       })
     }
     const updateTouched = async () => {
@@ -114,55 +152,121 @@ const useBoard = (wallet: ReturnType<typeof useWallet>) => {
         onTouched(ship, x, y)
       })
     }
+    const updateFiredAt = async () => {
+      const firedAtEvent = await wallet.contract.queryFilter('FiredAt', 0)
+      firedAtEvent.forEach(event => {
+        const { ship, x, y } = event.args
+        onFiredAt(ship,  x, y)
+      })
+    }
+
+    const updateHasWinner = async () => {
+      const firedAtEvent = await wallet.contract.queryFilter('HasWinner', 0)
+      firedAtEvent.forEach(event => {
+        const { owner } = event.args
+        onHasWinner(owner)
+      })
+    }
     await updateSize()
     await updateRegistered()
+    await updateFiredAt()
+    await updateHasWinner()
     await updateTouched()
     console.log('Registering')
     wallet.contract.on('Registered', onRegistered)
+    wallet.contract.on('FiredAt', onFiredAt)
+    wallet.contract.on('HasWinner', onHasWinner)
     wallet.contract.on('Touched', onTouched)
     return () => {
       console.log('Unregistering')
       wallet.contract.off('Registered', onRegistered)
+      wallet.contract.off('FiredAt', onFiredAt)
+      wallet.contract.off('HasWinner', onHasWinner)
       wallet.contract.off('Touched', onTouched)
     }
   }, [wallet])
-  return board
+  return [board, owners, hitPosition, winner]
+}
+
+const generateHex = () => {
+  const letters = "0123456789ABCDEF";
+  
+  let color = '#';
+
+  for (var i = 0; i < 6; i++)
+     color += letters[(Math.floor(Math.random() * 16))];
+
+  return color
 }
 
 const Buttons = ({ wallet }: { wallet: ReturnType<typeof useWallet> }) => {
+  const register = () => wallet?.contract.register2()
   const next = () => wallet?.contract.turn()
+  let i = 0; 
   return (
     <div style={{ display: 'flex', gap: 5, padding: 5 }}>
-      <button onClick={() => {}}>Register</button>
+      <button onClick={register}>Register</button>
       <button onClick={next}>Turn</button>
     </div>
   )
 }
 
-const CELLS = new Array(100 * 100)
+const CELLS = new Array(2 * 2)
 export const App = () => {
   const wallet = useWallet()
-  const board = useBoard(wallet)
+  const [board, owners, hitPosition, winner] = useBoard(wallet)
   const size = useWindowSize()
   const st = {
     ...size,
     gridTemplateRows: `repeat(${board?.length ?? 0}, 1fr)`,
     gridTemplateColumns: `repeat(${board?.[0]?.length ?? 0}, 1fr)`,
   }
+  
+
   return (
     <div className={styles.body}>
-      <h1>Welcome to Touché Coulé</h1>
+      {
+        winner ? (
+          <>
+                    <h1>We have a winner</h1>
+          <h1>{ winner } is the winner</h1>
+          </>
+        ) : 
+        (
+          <h1>Welcome to Touché Coulé</h1>
+        )
+      }
+      {
+        owners.map(owner => (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem'
+          }}>{owner.owner}: {owner.color} <div style={{ backgroundColor: `${owner.color}`, width: '2rem', height: '10px' }}></div></div>
+        ) )
+      }
       <div className={styles.grid} style={st}>
         {CELLS.fill(0).map((_, index) => {
           const x = Math.floor(index % board?.length ?? 0)
+          /**console.log("I want know x position:" + x); */
           const y = Math.floor(index / board?.[0]?.length ?? 0)
-          const background = board?.[x]?.[y] ? 'red' : undefined
+          /**console.log("I want know the y position:" + y);*/
+          const currentPosition = board?.[x]?.[y]
+          const background = currentPosition ? "url('https://raw.githubusercontent.com/zerodiversex/touche-coule/main/frontend/public/output-onlinepngtools.png')" : undefined
+          const border =  currentPosition < 0 ? undefined : currentPosition ? `8px solid ${owners.find(o => o.owner === board?.[x]?.[y].owner)?.color}`  : undefined
+          
           return (
-            <div key={index} className={styles.cell} style={{ background }} />
+            <div key={index} className={styles.cell} style={{ background, border }} />
           )
         })}
       </div>
       <Buttons wallet={wallet} />
+      History :
+      {
+        hitPosition.map(h => (
+          <p>{h?.ship} hit at: ({h?.x}, {h?.y})</p>
+        )) 
+      }
     </div>
   )
 }

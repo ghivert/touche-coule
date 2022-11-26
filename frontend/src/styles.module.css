@@ -18,8 +18,12 @@ body {
   display: grid;
   gap: 1px;
   margin: 0 auto;
+  background-image: url('https://media.istockphoto.com/id/538277301/vector/military-radar-green-display-with-coordinates.jpg?s=170667a&w=0&k=20&c=I9rTrSPhI86YWRIOK0eCrdaoftyI8Cd-v050UZ5QpH0=');
+  background-size: cover;
 }
 
 .cell {
-  background: #ddd;
+  background: transparent;
+  background-size: cover !important;
+  border: 1px solid grey;
 }
