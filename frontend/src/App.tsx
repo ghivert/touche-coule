@@ -211,7 +211,7 @@ const Buttons = ({ wallet }: { wallet: ReturnType<typeof useWallet> }) => {
   )
 }
 
-const CELLS = new Array(2 * 2)
+const CELLS = new Array(3 * 3)
 export const App = () => {
   const wallet = useWallet()
   const [board, owners, hitPosition, winner] = useBoard(wallet)
@@ -260,7 +260,9 @@ export const App = () => {
           )
         })}
       </div>
-      <Buttons wallet={wallet} />
+      {
+        !winner && (<Buttons wallet={wallet} />)
+      }
       History :
       {
         hitPosition.map(h => (

@@ -35,8 +35,8 @@ contract Main {
   );
 
   constructor() {
-    game.width = 2;
-    game.height = 2;
+    game.width = 3;
+    game.height = 3;
     index = 1;
     emit Size(game.width, game.height);
   }
@@ -69,6 +69,8 @@ contract Main {
   }
 
   function turn() external {
+    require(index < 3, "Only one player");
+
     bool[] memory touched = new bool[](index);
     for (uint256 i = 1; i < index; i++) {
       if (game.xs[i] < 0) continue;
