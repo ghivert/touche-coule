@@ -19,10 +19,24 @@ contract NormalShip is Ship {
     posShip = x + y * width;
   }
 
-  function fire(uint256 width, uint256 height) public override(Ship) returns (uint256, uint256) {
-    nextPos = nextPos + 1;
+  function fire(uint256 width, uint256 height)
+    public
+    override(Ship)
+    returns (uint256, uint256)
+  {
+    nextPos = (nextPos + 1);
     if (nextPos == posShip) nextPos++;
-    return (nextPos % width, (nextPos / height) % height);
+    return (
+      (nextPos *
+        uint256(
+          keccak256(abi.encodePacked(block.timestamp, block.difficulty, owner))
+        )) % width,
+      (nextPos +
+        uint256(
+          keccak256(abi.encodePacked(block.timestamp, block.difficulty, owner))
+        ) /
+        height) % height
+    );
   }
 
   function place(uint256 width, uint256 height)
@@ -40,7 +54,7 @@ contract NormalShip is Ship {
     return (x, y);
   }
 
-    function getOwner() public override returns (address){
-        return owner;
-    }
+  function getOwner() public override returns (address) {
+    return owner;
+  }
 }

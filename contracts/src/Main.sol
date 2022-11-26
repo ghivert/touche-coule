@@ -69,8 +69,6 @@ contract Main {
   }
 
   function turn() external {
-    require(index < 3, "Only one player");
-
     bool[] memory touched = new bool[](index);
     for (uint256 i = 1; i < index; i++) {
       if (game.xs[i] < 0) continue;
