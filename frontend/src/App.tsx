@@ -211,7 +211,7 @@ const Buttons = ({ wallet }: { wallet: ReturnType<typeof useWallet> }) => {
   )
 }
 
-const CELLS = new Array(3 * 3)
+const CELLS = new Array(10 * 10)
 export const App = () => {
   const wallet = useWallet()
   const [board, owners, hitPosition, winner] = useBoard(wallet)
