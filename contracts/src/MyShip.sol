@@ -20,6 +20,7 @@ contract MyShip is Ship{
         c.y = _y;
     }
 
+    
     function fire() public virtual override returns (uint, uint){
         uint x;
         uint y;
@@ -35,4 +36,33 @@ contract MyShip is Ship{
         uint y = uint(keccak256(abi.encodePacked(block.timestamp,block.difficulty,msg.sender,"y"))) % height;
         return (x,y);
     }
+
+    function move(uint width, uint height) public virtual override returns (uint, uint){
+        uint x = c.x;
+        uint y = c.y;
+        uint ranXorY = uint(keccak256(abi.encodePacked(block.timestamp,block.difficulty,msg.sender,"x"))) % 2;
+        uint ranDirection = uint(keccak256(abi.encodePacked(block.timestamp,block.difficulty,msg.sender,"y"))) % 2;
+        if(ranXorY == 0){
+            if(ranDirection == 0){
+                x = x-1;
+            }
+            else{
+                x = x+1;
+            }
+        }
+        else{
+            if(ranDirection == 0){
+                y = y-1;
+            }
+            else{
+                y = y+1;
+            }
+        }
+        if(x<=width && y<=height){
+            update(x,y);
+        }
+        return(c.x,c.y);
+               
+    }
+
 }

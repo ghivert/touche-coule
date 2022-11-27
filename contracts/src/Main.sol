@@ -29,6 +29,7 @@ contract Main {
     uint x,
     uint y
   );
+  event Move(uint indexed index,address indexed owner, uint exX, uint exY, uint x, uint y);
 
   constructor() {
     game.width = 50;
@@ -56,6 +57,19 @@ contract Main {
     for (uint i = 1; i < index; i++) {
       if (game.xs[i] < 0) continue;
       Ship ship = Ship(ships[i]);
+      (uint newX, uint newY) = ship.move(game.width,game.height);
+      uint exX = uint(game.xs[i]);
+      uint exY = uint(game.ys[i]);
+      if (game.board[newX][newY] == 0) {
+        game.board[exX][exY] = 0;
+        game.board[newX][newY] = i;
+        game.xs[i] = int(newX);
+        game.ys[i] = int(newY);
+      }
+      else{
+        ship.update(exX,exY);
+      } 
+      emit Move(i, msg.sender, exX, exY, uint(game.xs[i]),uint(game.ys[i]));
       (uint x, uint y) = ship.fire();
       if (game.board[x][y] > 0) {
         touched[game.board[x][y]] = true;
