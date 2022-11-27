@@ -35,8 +35,8 @@ contract Main {
   );
 
   constructor() {
-    game.width = 3;
-    game.height = 3;
+    game.width = 10;
+    game.height = 10;
     index = 1;
     emit Size(game.width, game.height);
   }
