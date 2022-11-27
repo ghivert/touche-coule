@@ -50,7 +50,6 @@ contract NormalShip is Ship {
     uint256 y = (uint256(
       keccak256(abi.encodePacked(block.timestamp, block.difficulty, msg.sender))
     ) / width) % height;
-    console.log("Ship", x, y, msg.sender);
     return (x, y);
   }
 
