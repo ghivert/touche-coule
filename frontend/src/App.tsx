@@ -56,11 +56,30 @@ const useWallet = () => {
   }, [details, contract])
 }
 
+const useWallet2 = () => {
+  const [details, setDetails] = useState<ethereum.Details>()
+  const [contract, setContract] = useState<main.ShipFactory>()
+  useAffect(async () => {
+    const details_ = await ethereum.connect('metamask')
+    if (!details_) return
+    setDetails(details_)
+    const contract_ = await main.initFactory(details_)
+    if (!contract_) return
+    setContract(contract_)
+  }, [])
+  return useMemo(() => {
+    if (!details || !contract) return
+    return { details, contract }
+  }, [details, contract])
+}
+
 type Ship = {}
-const useBoard = (wallet: ReturnType<typeof useWallet>) => {
+type ShipCELL = {owner : string}
+const useBoard = (wallet: ReturnType<typeof useWallet>, wallet2: ReturnType<typeof useWallet2>) => {
   const [board, setBoard] = useState<(null | Ship)[][]>([])
   useAffect(async () => {
     if (!wallet) return
+    if(!wallet2) return 
     const onRegistered = (
       id: BigNumber,
       owner: string,
@@ -92,6 +111,7 @@ const useBoard = (wallet: ReturnType<typeof useWallet>) => {
         })
       })
     }
+    
     const updateSize = async () => {
       const [event] = await wallet.contract.queryFilter('Size', 0)
       const width = event.args.width.toNumber()
@@ -104,46 +124,47 @@ const useBoard = (wallet: ReturnType<typeof useWallet>) => {
       const registeredEvent = await wallet.contract.queryFilter('Registered', 0)
       registeredEvent.forEach(event => {
         const { index, owner, x, y } = event.args
-        if(owner == wallet.details.account){
           onRegistered(index, owner, x, y)
-        }
-        
       })
     }
     const updateTouched = async () => {
       const touchedEvent = await wallet.contract.queryFilter('Touched', 0)
-      console.log(touchedEvent)
       touchedEvent.forEach(event => {
         const { ship, x, y } = event.args
         onTouched(ship, x, y)
       })
     }
+    const onShipDeploy = (a: string) => {
+      console.log('onShipDeploy')
+      wallet.contract.register(a)
+        .catch(err => {
+          console.log(err.reason.split("'")[1])
+        })
+    }
     await updateSize()
     await updateRegistered()
     await updateTouched()
     console.log('Registering')
-    console.log()
     wallet.contract.on('Registered', onRegistered)
     wallet.contract.on('Touched', onTouched)
+    wallet2?.contract.on('ShipDeploy', onShipDeploy)
     return () => {
       console.log('Unregistering')
       wallet.contract.off('Registered', onRegistered)
       wallet.contract.off('Touched', onTouched)
+      wallet2?.contract.off('ShipDeploy', onShipDeploy)
     }
-  }, [wallet])
+  }, [wallet, wallet2])
   return board
 }
 
-const Buttons = ({ wallet, setErrorMessage }: { wallet: ReturnType<typeof useWallet>, setErrorMessage : React.Dispatch<React.SetStateAction<string>> }) => {
-  const next = () => wallet?.contract.turn()
-  const register = () => {
-    const shipAddress = wallet?.details.account == "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" ? main.myShip() : main.myShip2()
-    
-    wallet?.contract.register(shipAddress).catch(err => {
-      setErrorMessage(err.reason.split("'")[1])
-    })
-    
-    
+
+
+const Buttons = ({ wallet, wallet2 }: { wallet: ReturnType<typeof useWallet> , wallet2 : ReturnType<typeof useWallet2>}) => {
+  const next = () => wallet?.contract.turn().then(r => console.log("turn over"))
+  const register = async () => {
+    wallet2?.contract.getListTypeShip().then(res => console.log(res))
+    wallet2?.contract.deployShip(0).then(res => console.log("deploy done"))
   }
   return (
     <div style={{ display: 'flex', gap: 5, padding: 5 }}>
@@ -157,10 +178,22 @@ const Buttons = ({ wallet, setErrorMessage }: { wallet: ReturnType<typeof useWal
 
 const CELLS = new Array(100 * 100)
 
+type Color = string
+type ColorOwner = { owner: string, color: Color }
+let colorOwner: ColorOwner[] = []
+
+const getColorOwner = (owner: string): Color => {
+  let color = colorOwner?.find(co => co?.owner == owner)
+  if (color) return color.color
+  let newColor: string | undefined = '#' + (Math.random() * 0xFFFFFF << 0).toString(16)
+  colorOwner.push({ owner: owner, color: newColor })
+  return newColor
+}
+
 export const App = () => {
   const wallet = useWallet()
-  const [errorMessage,setErrorMessage] = useState("")
-  const board = useBoard(wallet)
+  const wallet2 = useWallet2()
+  const board = useBoard(wallet, wallet2)
   const size = useWindowSize()
   const st = {
     ...size,
@@ -174,14 +207,15 @@ export const App = () => {
         {CELLS.fill(0).map((_, index) => {
           const x = Math.floor(index % board?.length ?? 0)
           const y = Math.floor(index / board?.[0]?.length ?? 0)
-          const background = board?.[x]?.[y] ? 'red' : undefined
+          let shipOwner : string = board?.[x]?.[y]  ? (board?.[x]?.[y] as ShipCELL).owner : ""
+          const color = (shipOwner == wallet?.details.account) ? "green" : "red"
+          const background = board?.[x]?.[y] ? color : undefined
           return (
             <div key={index} className={styles.cell} style={{ background }} />
           )
         })}
       </div>
-      {errorMessage}
-      <Buttons wallet={wallet} setErrorMessage={setErrorMessage}/>
+      <Buttons wallet={wallet} wallet2={wallet2}/>
     </div>
   )
 }
