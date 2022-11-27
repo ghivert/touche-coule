@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8;
 
-import './Ship.sol';
+import './MyShip.sol';
 
-struct Coordinates {
-    uint x;
-    uint y;
-}
 
 contract MyShip2 is Ship{
     Coordinates private c;
