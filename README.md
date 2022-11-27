@@ -67,3 +67,20 @@ The idea of the game is to fight in a free for all style (every players will pla
 - Test your implementation with the turn function. 
 
 Pro tip: you can automate the ship deployment and registering with the deployments. 
+
+# Tutorial
+
+1. After finishing setup and importing accounts into MetaMask, choose an account to create ships.
+
+Repeate one time to create a second ship for first player 
+
+2. Change the account to create ships for second player 
+
+Repeate all steps to create 2 ships for players 
+
+3. You can create as many player for your game just repeat all steps above but to start the game you have to create at least 2 players.
+Each player will have a different color of ship. 
+
+4. Let's make a fire, click on button Turn. 
+
+5. Destroy all ship of other players
