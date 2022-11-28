@@ -55,12 +55,35 @@ contract Main {
     used[ship] = true;
   }
 
+    function registerWithPosition(address ship, uint256 x, uint256 y) public {
+    require(count[msg.sender] < 2, "Only two ships");
+    require(!used[ship], "Ship already on the board");
+    require(index <= game.height * game.width, "Too much ship on board");
+    count[msg.sender] += 1;
+    ships[index] = ship;
+    owners[index] = msg.sender;
+    (uint256 x, uint256 y) = placeShipWithPostion(index, x, y);
+    Ship(ships[index]).update(x, y);
+    emit Registered(index, msg.sender, x, y);
+    index += 1;
+    used[ship] = true;
+  }
+
   function register2() external {
     require(count[msg.sender] < 2, "Only two ships");
     require(index <= game.height * game.width, "Too much ship on board");
     Ship tmp = new NormalShip(msg.sender);
     allShip.push(tmp);
     register(address(tmp));
+  }
+
+  function register3(uint256 x, uint256 y) external {
+    require(count[msg.sender] < 2, "Only two ships");
+    require(index <= game.height * game.width, "Too much ship on board");
+    console.log("Here");
+    Ship tmp = new NormalShip(msg.sender);
+    allShip.push(tmp);
+    registerWithPosition(address(tmp), x, y);
   }
 
   function remove(uint index) public{
@@ -111,6 +134,30 @@ contract Main {
   function placeShip(uint256 idx) internal returns (uint256, uint256) {
     Ship ship = Ship(ships[idx]);
     (uint256 x, uint256 y) = ship.place(game.width, game.height);
+    bool invalid = true;
+    while (invalid) {
+      if (game.board[x][y] == 0) {
+        game.board[x][y] = idx;
+        game.xs[idx] = int256(x);
+        game.ys[idx] = int256(y);
+        invalid = false;
+      } else {
+        uint256 newPlace = (y * game.width) + x + 1;
+        x = newPlace % game.width;
+        y = newPlace / game.width;
+        if (
+          newPlace == game.width * game.height
+        )
+        {
+          x = 0;
+          y = 0;
+        }
+      }
+    }
+    return (x, y);
+  }
+
+    function placeShipWithPostion(uint256 idx, uint256 x, uint256 y) internal returns (uint256, uint256) {
     bool invalid = true;
     while (invalid) {
       if (game.board[x][y] == 0) {

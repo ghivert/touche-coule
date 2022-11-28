@@ -3,6 +3,8 @@ import styles from './styles.module.css'
 import * as ethereum from '@/lib/ethereum'
 import * as main from '@/lib/main'
 import { BigNumber } from 'ethers'
+import Form from 'react-bootstrap/Form';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 type Canceler = () => void
 const useAffect = (
@@ -199,13 +201,18 @@ const generateHex = () => {
   return color
 }
 
-const Buttons = ({ wallet }: { wallet: ReturnType<typeof useWallet> }) => {
+const Buttons = ({ wallet, position, setPosition }: { wallet: ReturnType<typeof useWallet>, position: any, setPosition: any }) => {
+  const register3 = () => {
+    wallet?.contract.register3(+position?.x, +position?.y)
+    setPosition(null)
+  }
   const register = () => wallet?.contract.register2()
   const next = () => wallet?.contract.turn()
   let i = 0; 
   return (
     <div style={{ display: 'flex', gap: 5, padding: 5 }}>
       <button onClick={register}>Register</button>
+      <button onClick={register3}>Register with position</button>
       <button onClick={next}>Turn</button>
     </div>
   )
@@ -216,6 +223,8 @@ export const App = () => {
   const wallet = useWallet()
   const [board, owners, hitPosition, winner] = useBoard(wallet)
   const size = useWindowSize()
+  const [position, setPosition] = useState<any>(null)
+
   const st = {
     ...size,
     gridTemplateRows: `repeat(${board?.length ?? 0}, 1fr)`,
@@ -260,9 +269,30 @@ export const App = () => {
           )
         })}
       </div>
+      <Form.Label htmlFor="inputPassword5">Position X :</Form.Label>
+      <Form.Control
+        type="text"
+        aria-describedby="passwordHelpBlock"
+        value={position?.x}
+        onChange={e => setPosition({
+          ...position,
+          x: e.target.value
+        })}
+      />
+      <Form.Label htmlFor="inputPassword5">Position Y :</Form.Label>
+      <Form.Control
+        type="text"
+        aria-describedby="passwordHelpBlock"
+        value={position?.y}
+        onChange={e => setPosition({
+          ...position,
+          y: e.target.value
+        })}
+      />
       {
-        !winner && (<Buttons wallet={wallet} />)
+        !winner && (<Buttons wallet={wallet} position={position} setPosition={setPosition} />)
       }
+
       History :
       {
         hitPosition.map(h => (
